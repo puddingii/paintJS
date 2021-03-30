@@ -4,6 +4,9 @@ const colors = document.getElementsByClassName("jsColor");
 const range = document.getElementById("jsRange");
 const mode = document.getElementById("jsMode");
 const saveBtn = document.getElementById("jsSave");
+const freeBtn = document.getElementById("jsFree");
+const rectBtn = document.getElementById("jsRect");
+const circleBtn = document.getElementById("jsCircle");
 
 const INITIAL_COLOR = "#2c2c2c";
 const CONVAS_SIZE = 700;
@@ -20,6 +23,15 @@ ctx.lineWidth = 2.5;
 
 let painting = false;
 let filling = false;
+let nowShape = "free";
+let rectBegin = {
+    x:0,
+    y:0
+};
+let circleBegin = {
+    x:0,
+    y:0
+};
 
 function stopPainting() {
     painting = false;
@@ -33,18 +45,45 @@ function onMouseMove(e) {
     const x = e.offsetX;
     const y = e.offsetY;
     //path를 만들어야함. 누른시점부터 마우스를 땐 시점까지의 path
-    if(!painting) {
-        ctx.beginPath(); //경로생성
-        ctx.moveTo(x,y);  //선 시작 좌표
-    } else {
-        ctx.lineTo(x, y);  //선 끝 좌표
-        ctx.stroke();  // 선 그리기
+    if(nowShape === "free") {
+        if(!painting) {
+            ctx.beginPath(); //경로생성
+            ctx.moveTo(x,y);  //선 시작 좌표
+        } else {
+            ctx.lineTo(x, y);  //선 끝 좌표
+            ctx.stroke();  // 선 그리기
+        }
+    } else if(nowShape === "circle") {
+        if(!painting) {
+            ctx.beginPath();
+        }
     }
 }
 
 function onMouseDown(e) {
     painting = true;
+    if(nowShape === "rect") {
+        rectBegin.x = e.offsetX;
+        rectBegin.y = e.offsetY;
+    } else if(nowShape ==="circle") {
+        circleBegin.x = e.offsetX;
+        circleBegin.y = e.offsetY;
+    }
+}
 
+function onMouseUp(e) {
+    painting = false;
+    let x = e.offsetX;
+    let y = e.offsetY;
+    
+    if(nowShape === "rect") {
+        ctx.fillRect(rectBegin.x, rectBegin.y, x-rectBegin.x, y-rectBegin.y);
+    } else if(nowShape ==="circle") {
+        ctx.beginPath();
+        const radius = Math.sqrt(Math.pow(circleBegin.x-x,2) + Math.pow(circleBegin.y-y,2))/2; 
+        ctx.arc((circleBegin.x+x)/2, (circleBegin.y+y)/2, radius, 0, Math.PI * 2, true);
+        ctx.fill();
+    }
 }
 
 function handleColor(e) {
@@ -87,10 +126,37 @@ function handleSaveClick() {
     link.click();
 }
 
+function handleFreeClick() {
+    if(nowShape !== "free") {
+        freeBtn.innerText = "free..";
+        rectBtn.innerText = "rect";
+        circleBtn.innerText = "Circle";
+        nowShape = "free";
+    }
+}
+
+function handleRectClick() {
+    if(nowShape !== "rect") {
+        freeBtn.innerText = "free";
+        rectBtn.innerText = "Rect..";
+        circleBtn.innerText = "Circle";
+        nowShape = "rect";
+    }
+}
+
+function handleCircleClick() {
+    if(nowShape !== "circle") {
+        freeBtn.innerText = "free";
+        rectBtn.innerText = "Rect";
+        circleBtn.innerText = "Circle..";
+        nowShape = "circle";
+    }
+}
+
 if(canvas) {
     canvas.addEventListener("mousemove", onMouseMove);
-    canvas.addEventListener("mousedown", startPainting);  //클릭했을때의 이벤트
-    canvas.addEventListener("mouseup", stopPainting);
+    canvas.addEventListener("mousedown", onMouseDown);  //클릭했을때의 이벤트
+    canvas.addEventListener("mouseup", onMouseUp);
     canvas.addEventListener("mouseleave", stopPainting);
     canvas.addEventListener("click", handleConvasClick);
     canvas.addEventListener("contextmenu", handleCM);
@@ -108,4 +174,16 @@ if(mode) {
 
 if(saveBtn) {
     saveBtn.addEventListener("click", handleSaveClick);
+}
+
+if(freeBtn) {
+    freeBtn.addEventListener("click", handleFreeClick);
+}
+
+if(rectBtn) {
+    rectBtn.addEventListener("click", handleRectClick);
+}
+
+if(circleBtn) {
+    circleBtn.addEventListener("click", handleCircleClick);
 }
